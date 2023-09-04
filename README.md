@@ -43,9 +43,9 @@
 **위 방안 중 1. 복제본 사용, 3. 롤링 업데이트, 4. 리소스 제한 및 할당, 5. EFK Stack 을 프로젝트에 최종적으로 적용.** 
 
 <aside>
-💡 **이 글에서 앞으로 아래와 같이 EC2 인스턴스를 칭하겠습니다.
+💡 이 글에서 앞으로 아래와 같이 EC2 인스턴스를 칭하겠습니다.
 EC2 #1 → 마스터 노드 EC2 인스턴스
-EC2 #2 → 워커 노드 EC2 인스턴스**
+EC2 #2 → 워커 노드 EC2 인스턴스
 
 </aside>
 
@@ -448,7 +448,7 @@ kubectl apply -f metallb-config.yaml
 ```
 
 <aside>
-💡 **kubectl get service** 입력 시 나오는 서비스 목록에는 External-IP가 할당 되어야 한다.
+💡 kubectl get service 입력 시 나오는 서비스 목록에는 External-IP가 할당 되어야 한다.
 
 ![Untitled](images/Untitled%2010.png)
 
@@ -728,8 +728,8 @@ spec:
 
 <aside>
 💡 해당 파이프라인을 사용하려면 다음 ID를 가진 Credential이 Jenkins에 정의되어 있어야 한다.
-- **docker-hub-credentials** : Docker hub 계정 정보
-- **kubeconfig** : kubeconfig Secret File
+- docker-hub-credentials : Docker hub 계정 정보
+- kubeconfig : kubeconfig Secret File
 
 예시로 든 Gateway 저장소의 루트 디렉토리의 구성은 다음과 같다.
 
@@ -743,7 +743,7 @@ spec:
 - Jenkins-agent Pod는 는 jnlp, docker, kubectl 컨테이너로 구성되어 있으며, 내가 원하는 작업을 수행하는 역할을 한다.
 
 <aside>
-⚠️ Jenkinsfile을 작성하고, Pipeline을 정상 동작시키는데에, 엄청난 시간을 소모했다. 특히, **kubectl** 컨테이너에서 sh 명령어가 동작하지 않는 부분에 가장 큰 시간을 소모했는데,  ‘**securityContext: runAsUser: 0’** 옵션으로 권한을 부여하여 해결했다. 
+⚠️ Jenkinsfile을 작성하고, Pipeline을 정상 동작시키는데에, 많은 노력을 기했다. 특히, kubectl 컨테이너에서 sh 명령어가 동작하지 않는 부분에 가장 큰 시간을 소모했는데,  'securityContext: runAsUser: 0’ 옵션으로 권한을 부여하여 해결했다. 
 
 하지만, 이런 방식으로 무작정 모든 권한을 부여하는 것은 좋지 않은 것 같다. 
 프로젝트 진행을 위해 그냥 넘어갔지만, 다음 번엔 정확히 알고 사용해야 할 것 같다.
@@ -846,7 +846,7 @@ spec:
 
 <aside>
 💡 Github Webhook을 통한 파이프라인 작업은, 특정 조치를 취해야 한다.
-**(이 부분을 알지 못해 상당한 시간을 소모했었다.)**
+(이 부분을 알지 못해 상당한 시간을 소모했었다.)
 
 특정 조치는 다음과 같다.
 - 빌드 트리거로 Github Push 감지하고 Pipeline Job을 실행한다.
