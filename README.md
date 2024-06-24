@@ -1,12 +1,13 @@
+
 # k8s 가이드 v1.0 2023-05 ~
+
+lasted updated : 2024. 6. 24.
 
 ##### * SSAFY에서 진행한 CreAIte 팀 프로젝트에서 인프라를 담당하며, 공유 및 참고를 위해 작성한 가이드입니다.
 
 ---
 
 # 아키텍처
-
----
 
 ### 아키텍처 구성
 
@@ -26,43 +27,40 @@
 
 ## 인프라 구축 환경 및 목표
 
----
 
 **EC2 인스턴스를 2개 사용하는 상황**에서 마스터 노드와 워커 노드를 각각 하나씩 운영하기 때문에, 가용성을 완벽하게 확보하기 어려운 상황.
 
 가용성을 향상시키려면 일반적으로 여러 워커 노드를 사용하여 애플리케이션을 분산시키고, 노드 간에 리소스를 조정해야함.
 
 **현 상황에 상대적인 가용성을 높이려면, 다음과 같은 방안을 고려할 수 있음.**
-
+```
 1. 복제본 사용: 쿠버네티스에서 제공하는 복제본(replicas) 기능을 활용하여 워커 노드 내에서 각 애플리케이션의 인스턴스를 여러 개 실행시킵니다. 이를 통해 애플리케이션 인스턴스 중 하나에 문제가 발생하더라도, 다른 인스턴스를 통해 서비스를 계속 제공할 수 있습니다.
 2. 자동 복구 설정: 쿠버네티스의 livenessProbe와 readinessProbe를 설정하여, 애플리케이션의 상태를 감지하고 필요한 경우에 자동으로 인스턴스를 재시작하거나 대체할 수 있습니다. 이를 통해 애플리케이션의 문제가 발생했을 때 빠르게 대응할 수 있습니다.
 3. 롤링 업데이트: 애플리케이션 업데이트 시, 쿠버네티스의 롤링 업데이트 기능을 활용하여 서비스 중단 없이 순차적으로 인스턴스를 업데이트할 수 있습니다. 이 방법은 가용성을 유지하면서 애플리케이션 업데이트를 수행할 수 있게 합니다.
 4. 리소스 제한 및 할당: 네임스페이스를 사용하여 각 애플리케이션별로 리소스 제한을 설정하고, 전체 시스템의 리소스 사용을 관리할 수 있습니다. 이를 통해 한 애플리케이션의 리소스 사용이 다른 애플리케이션에 영향을 주지 않도록 제한할 수 있습니다.
 5. 모니터링 및 로깅: 애플리케이션 및 인프라의 모니터링과 로깅을 설정하여, 시스템 상태를 실시간으로 확인하고 문제 발생 시 즉시 대응할 수 있도록 합니다. 이를 통해 가용성을 지속적으로 관리하고 개선할 수 있습니다.
+```
+**위 방안 중 (1)복제본 사용, (3)롤링 업데이트, (4)리소스 제한 및 할당, (5)EFK Stack 를 프로젝트에 최종적으로 적용** 
 
-**위 방안 중 1. 복제본 사용, 3. 롤링 업데이트, 4. 리소스 제한 및 할당, 5. EFK Stack 을 프로젝트에 최종적으로 적용.** 
-
-<aside>
-💡 이 글에서 앞으로 아래와 같이 EC2 인스턴스를 칭하겠습니다.
-EC2 #1 → 마스터 노드 EC2 인스턴스
-EC2 #2 → 워커 노드 EC2 인스턴스
-
-</aside>
+```
+💡 본문에서는 앞으로 사용 중인 2개의 인스턴스를 다음과 같이 칭하겠습니다.
+- 마스터 노드 EC2 인스턴스 → EC2 #1  
+- 워커 노드 EC2 인스턴스 → EC2 #2 
+```
 
 ## 환경 구성
 
----
 
 **kubernetes를 설치하기 위해 다음 과정을 진행한다.**
 
 - Docker설치
 - Kubernetes 설치
 
-다음 github에 있는 Shell Script를 활용 하겠다. 
+다음 github에 있는 Shell Script를 활용 하겠다.
 
 **sandervanvugt/cka**
 
-**master,node1,node2모두**에 동일하게 git clone을 진행해 주자.
+**master, node1, node2 모두**에 동일하게 git clone을 진행해 주자.
 
 ```bash
 ubuntu@master:~$ git clone https://github.com/sandervanvugt/cka.git
@@ -85,17 +83,16 @@ ubuntu@node2:~/cka$ sudo ./setup-kubetools.shbash
 
 이제 Docker와 Kubernetes가 다 설치 완료 되었다.
 
-## Kubernetes cluster - 생성
+## Kubernetes 클러스터 생성
 
----
 
-**master**에 Control plane을 만들어 주자.
+**마스터 노드**에 Control plane을 만들어 주자.
 
 ```bash
 ubuntu@master:~/cka$ sudo kubeadm initbash
 ```
 
-성공적으로 설치가 완료 되었다면 아래와 같이 master에서만 명령어를 실행 시켜준다.
+성공적으로 설치가 완료 되었다면 아래 명령어를 마스터 노드에서만 실행시켜준다.
 
 ```bash
 mkdir -p $HOME/.kube
@@ -103,7 +100,7 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/configbash
 ```
 
-이제 Control Pane 설치가 완료 되었으므로 Node를 등록해야 한다.
+위 명령어를 적용했다면 Control Plane 설치가 완료 되었으므로 사용 할 Node 들을 등록해야 한다.
 
 **Node1, Node2**에서는 아래 명령어를 실행해 준다.
 
@@ -112,7 +109,7 @@ sudo kubeadm join 10.112.125.79:6443 --token 9l0e6o.qj4woevjzw2d6323 \
 --discovery-token-ca-cert-hash sha256:d726f1abcd3601d00a0146fe7d2a78cafcf732d16e76f39a6117495e75987828bash
 ```
 
-위에 명령어는 설치 마지막에 나오는 값이다.
+위 명령어의 토큰은 Control Plane의 설치 완료 후에 나오는 토큰 값이다.
 
 ![Untitled](images/Untitled%203.png)
 
@@ -122,15 +119,13 @@ Node 3개가 나오면 Kubernetes 설치를 완료 한 것이다.
 
 ## Kubernetes cluster - Network Plugin 설치
 
----
-
 위에서 보면 get nodes의 결과에 Status가 NotReady인것을 확인 할 수있다.
 
-네트워크 설치가 필요하다.
+NotReady가 발생하는 이유는 네트워크를 설치하지 않았기 때문이다.
 
-[https://kubernetes.io/docs/concepts/cluster-administration/networking/](https://kubernetes.io/docs/concepts/cluster-administration/networking/)
+참고: [https://kubernetes.io/docs/concepts/cluster-administration/networking/](https://kubernetes.io/docs/concepts/cluster-administration/networking/)
 
-cluster network를 위해서 plugin을 설치해 줘야 한다.
+cluster network를 구성하기 위해 plugin을 설치해 줘야 한다.
 
 여기서는 weave 를 설치하겠다.
 
@@ -148,13 +143,12 @@ $ kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/
 
 ![Untitled](images/Untitled%206.png)
 
-노드가 2개인 이유는 아래 섹션의 **프로젝트 환경**을 참고 바란다.
+
 
 **이제 클러스터 구성이 완료되었다.**
 
 ## 클러스터 외부 요소 배포 - Docker
 
----
 
 **Docker 설치 (생략)**
 
@@ -249,7 +243,6 @@ services:
 
 ## 클러스터 내부 - Storage Class
 
----
 
 ### Storage Class
 
@@ -275,8 +268,6 @@ parameters:
 ![Untitled](images/Untitled%207.png)
 
 ## 클러스터 내부 - Jenkins
-
----
 
 **[jenkins-pv-dev.yaml]**
 
@@ -404,7 +395,6 @@ spec:
 
 ## 클러스터 내부 - MetalLB
 
----
 
 ### MetalLB 설치
 
@@ -487,7 +477,6 @@ SSL 발급 시 ‘Use a DNS Challenge’ → Cloudflare API token 입력해 와�
 
 ## 클러스터 내부 - Spring Cloud Gateway
 
----
 
 **[gateway/application.yaml]**
 
@@ -547,8 +536,6 @@ spring:
 </aside>
 
 ## Jenkins Pipeline CI/CD
-
----
 
 ### 플러그인 설치
 
@@ -887,7 +874,3 @@ spec:
 
 - **GitHub hook trigger for GITScm polling 체크**
 - **빌드 후 조치 → Build other projects에 생성한 Pipeline Job 입력**
-
-## 클러스터 내부 - EFK Stack
-
-- 추가 예정
