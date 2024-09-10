@@ -76,9 +76,9 @@ Resolving deltas: 100% (75/75),done.
 역시 **master,node1,node2 모두** 아래 명령어를 실행 시켜 준다.
 
 ```bash
-ubuntu@master:~/cka$ ./setup-container.sh
+~/cka$ ./setup-container.sh
 
-ubuntu@node2:~/cka$ sudo ./setup-kubetools.shbash
+~/cka$ sudo ./setup-kubetools.sh
 ```
 
 이제 Docker와 Kubernetes가 다 설치 완료 되었다.
@@ -89,7 +89,7 @@ ubuntu@node2:~/cka$ sudo ./setup-kubetools.shbash
 **마스터 노드**에 Control plane을 만들어 주자.
 
 ```bash
-ubuntu@master:~/cka$ sudo kubeadm initbash
+ubuntu@master:~/cka$ sudo kubeadm init
 ```
 
 성공적으로 설치가 완료 되었다면 아래 명령어를 마스터 노드에서만 실행시켜준다.
@@ -97,7 +97,7 @@ ubuntu@master:~/cka$ sudo kubeadm initbash
 ```bash
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/configbash
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
 위 명령어를 적용했다면 Control Plane 설치가 완료 되었으므로 사용 할 Node 들을 등록해야 한다.
