@@ -75,7 +75,7 @@ Receiving objects: 100% (185/185), 344.62 KiB | 2.73 MiB/s,done.
 Resolving deltas: 100% (75/75),done.
 ```
 
-역시 **master,node1,node2 모두** 아래 명령어를 실행 시켜 준다.
+역시 **master, node1, node2 모두** 아래 명령어를 실행 시켜 준다.
 
 ```bash
 ~/cka$ ./setup-container.sh
